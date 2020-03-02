@@ -105,7 +105,7 @@ public Server rsServer() {
 ```
 ### You can find the complete source code for this demo at repo below
 
-     https://github.com/devonfw-sample/swaggersample
+     https://github.com/devonfw-sample/devon4j-swaggersample
 
 Swagger JSON Doc can be accessed at
 

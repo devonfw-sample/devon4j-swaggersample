@@ -1,0 +1,113 @@
+## Integrating Swagger in Devon
+
+### Features
+* Generation of Swagger JSON docs.
+
+### Configuration Steps 
+* Add the following dependencies to project's `parent` pom.xml, here property `cxf.version` is set to **3.2.5**
+
+```xml
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-jaxrs2</artifactId>
+			<version>2.1.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-rs-service-description-swagger</artifactId>
+			<version>${cxf.version}</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.webjars/swagger-ui -->
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>swagger-ui</artifactId>
+			<version>3.25.0</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.cxf/cxf-rt-rs-json-basic -->
+		<dependency>
+			<groupId>org.apache.cxf</groupId>
+			<artifactId>cxf-rt-rs-json-basic</artifactId>
+			<version>${cxf.version}</version>
+			<scope>provided</scope>
+		</dependency>
+```
+
+* Mark REST services as a Swagger resource with `@Api` annotation as shown below
+```
+@Path("/staffmembermanagement/v1")
+@Api(value = "General Rest Server", consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Produces(MediaType.APPLICATION_JSON)
+public interface StaffmembermanagementRestService 
+```
+
+* Use Swagger annotations to describe REST method operations as shown below
+```
+@GET
+@Path("/staffmember/{id}/")
+@ApiOperation(value = "Finds Staff Member with Id - (version in URL)")
+@ApiResponses(value = {
+@ApiResponse(code = 200, message = "StaffMember resource found", response = StaffMemberEto.class),
+@ApiResponse(code = 404, message = "StaffMember resource not found") })
+public StaffMemberEto getStaffMember(@PathParam("id") long id);
+```
+
+* Configure CXF `Feature` bean as per project's REST service. Set `cxf.path` in `application.properties` file
+```
+@Value("${cxf.path}")
+private String basePath;
+
+@Bean("swagger2Feature")
+public Feature swagger2Feature() {
+  Swagger2Feature result = new Swagger2Feature();
+  result.setTitle("Demo for integration of Devon application wtih Swagger");
+  result.setDescription("This is a demo for integration of Swagger into a Devon application using CXF");
+  result.setBasePath(this.basePath);
+  result.setVersion("v1");
+  result.setContact("Devonfw");
+  result.setSchemes(new String[] { "http", "https" });
+  return result;
+}
+```
+
+* Create a JAXRS `Server` bean. Autowire `Swagger2Feature` bean configured in previous step and CFX `Bus`. And pass them to the server bean. Additionally Autowire
+  `ServletRegistrationBean` to set url-mapping.
+```
+@Autowired
+private Bus bus;
+
+@Autowired
+private Feature swagger2Feature;
+
+@Autowired
+ServletRegistrationBean servletRegistrationBean;
+
+@Bean
+public Server rsServer() {
+
+    JAXRSServerFactoryBean endpoint = new JAXRSServerFactoryBean();
+    List<Feature> features = new ArrayList<>();
+    features.add(this.swagger2Feature);
+    this.bus.setFeatures(features);
+    endpoint.setBus(this.bus);
+    endpoint.setServiceBeans(Arrays.<Object> asList(new StaffmembermanagementRestServiceImpl()));
+    endpoint.setAddress("/");
+    endpoint.setFeatures(Arrays.asList(this.swagger2Feature));
+    endpoint.setProvider(new SwaggerToOpenApiConversionFilter());
+    List<String> urlMappings = new ArrayList<>();
+    urlMappings.add(this.basePath + "/*");
+    this.servletRegistrationBean.setUrlMappings(urlMappings);
+    return endpoint.create();
+  }
+```
+### You can find the complete source code for this demo at repo below
+
+     https://github.com/devonfw-sample/swaggersample
+
+Swagger JSON Doc can be accessed at
+
+     http://localhost:8081/services/api-docs?url=/services/rest/swagger.json
+     

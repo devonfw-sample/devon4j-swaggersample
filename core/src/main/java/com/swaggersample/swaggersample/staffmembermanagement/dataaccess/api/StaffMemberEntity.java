@@ -6,9 +6,6 @@ import javax.persistence.Table;
 import com.swaggersample.swaggersample.general.dataaccess.api.ApplicationPersistenceEntity;
 import com.swaggersample.swaggersample.staffmembermanagement.common.api.StaffMember;
 
-/**
- * @author rrohitku
- */
 @Entity
 @Table(name = "staffmember")
 public class StaffMemberEntity extends ApplicationPersistenceEntity implements StaffMember {

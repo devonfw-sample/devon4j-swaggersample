@@ -8,4 +8,4 @@ CREATE TABLE STAFFMEMBER(
 );
 
 insert into staffmember(id, modificationCounter, firstname, lastname, name)
-values(1, 1, 'Rohit', 'Rai', 'Rohit Rai');
+values(1, 1, 'admin', 'admin', 'admin');
